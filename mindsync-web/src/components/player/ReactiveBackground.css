@@ -1,0 +1,63 @@
+.reactive-background {
+    position: fixed;
+    inset: 0;
+    background: #05060b;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.reactive-orbit {
+    position: absolute;
+}
+
+.reactive-orbit-red {
+    top: 15%;
+    left: 10%;
+    animation: alternateRed 10s infinite ease-in-out alternate;
+}
+
+.reactive-orbit-blue {
+    bottom: 15%;
+    right: 10%;
+    animation: alternateBlue 10s infinite ease-in-out alternate;
+}
+
+.reactive-orbit-purple {
+    top: 50%;
+    left: 50%;
+    animation: purpleCoreGlow 7s infinite ease-in-out alternate;
+}
+
+.reactive-blob {
+    border-radius: 50%;
+    filter: blur(130px);
+    will-change: transform, opacity;
+    transition: transform 0.08s linear, opacity 0.08s linear;
+}
+
+.reactive-blob-red {
+    width: 500px;
+    height: 500px;
+    background: rgba(239, 68, 68, 0.55);
+}
+
+.reactive-blob-blue {
+    width: 500px;
+    height: 500px;
+    background: rgba(0, 191, 255, 0.55);
+}
+
+.reactive-blob-purple {
+    width: 480px;
+    height: 480px;
+    background: rgba(168, 85, 247, 0.6);
+}
+
+.reactive-darkness-overlay {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0.95;
+    transition: opacity 0.1s linear;
+    pointer-events: none;
+}

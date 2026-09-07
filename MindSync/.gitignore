@@ -1,0 +1,31 @@
+## .NET build artifacts
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+## Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+## Publish output
+[Pp]ublish/
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Environment secrets — Nunca faça commit de credenciais reais.
+.env
+.env.*
+!.env.example

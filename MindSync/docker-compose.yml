@@ -1,0 +1,38 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mindsync-sqlserver
+    user: root
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - mindsync_db_data:/var/opt/mssql/data
+    networks:
+      - mindsync-network
+      
+  api:
+    image: mindsync-api:latest
+    container_name: mindsync-api-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=MindSyncDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
+      - JwtSettings__Secret=${JWT_SECRET}
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver
+    networks:
+      - mindsync-network
+
+volumes:
+  mindsync_db_data:
+
+networks:
+  mindsync-network:
+    driver: bridge

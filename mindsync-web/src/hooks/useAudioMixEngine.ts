@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AudioMixLayer } from '../types/audioMix';
+import { publishPlaybackTiming, type PlaybackTimer } from '../utils/playbackTiming';
 
 interface LayerNodes {
     source: AudioBufferSourceNode;
@@ -16,7 +17,7 @@ function concatChunks(chunks: Uint8Array[], totalLength: number): ArrayBuffer {
     return result.buffer;
 }
 
-export function useAudioMixEngine(layers: AudioMixLayer[]) {
+export function useAudioMixEngine(layers: AudioMixLayer[], timer?: PlaybackTimer) {
     const [isLoading, setIsLoading] = useState(true);
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [error, setError] = useState('');
@@ -42,6 +43,7 @@ export function useAudioMixEngine(layers: AudioMixLayer[]) {
 
             const bytesLoaded = new Array<number>(layers.length).fill(0);
             const bytesTotal = new Array<number>(layers.length).fill(0);
+            let downloadsFinished = 0;
 
             const reportProgress = () => {
                 const totalKnown = bytesTotal.reduce((sum, t) => sum + t, 0);
@@ -58,6 +60,8 @@ export function useAudioMixEngine(layers: AudioMixLayer[]) {
                 analyser.fftSize = 256;
                 analyser.connect(context.destination);
                 analyserRef.current = analyser;
+
+                timer?.mark('fetchStart');
 
                 const buffers = await Promise.all(
                     layers.map(async (layer, index) => {
@@ -93,12 +97,16 @@ export function useAudioMixEngine(layers: AudioMixLayer[]) {
                             }
                         }
 
+                        downloadsFinished += 1;
+                        if (downloadsFinished === layers.length) timer?.mark('downloadEnd');
+
                         const arrayBuffer = concatChunks(chunks, received);
                         return context.decodeAudioData(arrayBuffer);
                     })
                 );
 
                 if (cancelled) return;
+                timer?.mark('decodeEnd');
                 buffersRef.current = buffers;
 
                 const initialVolumes = layers.map((layer) => layer.volume);
@@ -126,7 +134,7 @@ export function useAudioMixEngine(layers: AudioMixLayer[]) {
             audioContextRef.current?.close().catch(() => { });
             audioContextRef.current = null;
         };
-    }, [layers]);
+    }, [layers, timer]);
 
     const buildAndStartSources = useCallback(() => {
         const context = audioContextRef.current;
@@ -147,7 +155,14 @@ export function useAudioMixEngine(layers: AudioMixLayer[]) {
 
             return { source, gain };
         });
-    }, [layers]);
+
+        if (timer) {
+            timer.mark('firstSound');
+            timer.setAudioLatency(((context.baseLatency ?? 0) + (context.outputLatency ?? 0)) * 1000);
+            const report = timer.report();
+            if (report) publishPlaybackTiming(report);
+        }
+    }, [layers, timer]);
 
     const play = useCallback(async () => {
         const context = audioContextRef.current;

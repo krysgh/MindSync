@@ -7,11 +7,13 @@ import { ReactiveBackground } from '../components/player/Reactivebackground';
 import { MixerPanel } from '../components/player/MixerPanel';
 import { CloseIcon, PauseIcon, PlayIcon, SlidersIcon } from '../components/icons/Icons';
 import type { AudioMixLayer } from '../types/audioMix';
+import { createPlaybackTimer } from '../utils/playbackTiming';
 import './Player.css';
 
 export function Player() {
     const { sessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();
+    const [timer] = useState(() => createPlaybackTimer());
 
     const [layers, setLayers] = useState<AudioMixLayer[]>([]);
     const [isResolving, setIsResolving] = useState(true);
@@ -24,7 +26,9 @@ export function Player() {
         sessionAudioMixService
             .resolve(sessionId)
             .then((mix) => {
-                if (!cancelled) setLayers(mix.layers);
+                if (cancelled) return;
+                timer.mark('resolveEnd');
+                setLayers(mix.layers);
             })
             .catch((err) => {
                 if (!cancelled) setResolveError(err instanceof Error ? err.message : 'Falha ao carregar a sessão.');
@@ -36,9 +40,9 @@ export function Player() {
         return () => {
             cancelled = true;
         };
-    }, [sessionId]);
+    }, [sessionId, timer]);
 
-    const engine = useAudioMixEngine(layers);
+    const engine = useAudioMixEngine(layers, timer);
     const isControlsVisible = useIdleControls(3000);
     const [isMixerOpen, setIsMixerOpen] = useState(false);
 

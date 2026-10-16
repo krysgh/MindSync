@@ -10,6 +10,7 @@ const PEAK_VUS = Number(__ENV.PEAK_VUS || 10);
 const BASELINE_ITERATIONS = Number(__ENV.ITERATIONS || 100);
 const IDOR_ITERATIONS = Number(__ENV.IDOR_ITERATIONS || 30);
 const THINK_TIME = Number(__ENV.THINK_TIME || 0.5);
+const DOWNLOAD_AUDIO = (__ENV.DOWNLOAD_AUDIO || '1') !== '0';
 const ENABLED = (__ENV.SCENARIOS || 'baseline').split(',').map((s) => s.trim());
 
 const FREQUENCIES = [
@@ -23,7 +24,7 @@ const ENDPOINTS = [
     'login',
     'create_session',
     'resolve_mix',
-    'audio_download',
+    ...(DOWNLOAD_AUDIO ? ['audio_download'] : []),
     'complete_session',
     'list_sessions',
 ];
@@ -65,7 +66,7 @@ ENABLED.forEach((name) => {
         return;
     }
     thresholds[`http_req_failed{scenario:${name}}`] = ['rate<0.01'];
-    thresholds[`audio_ready_ms{scenario:${name}}`] = ['max>=0'];
+    if (DOWNLOAD_AUDIO) thresholds[`audio_ready_ms{scenario:${name}}`] = ['max>=0'];
     ENDPOINTS.forEach((endpoint) => {
         thresholds[`http_req_duration{scenario:${name},endpoint:${endpoint}}`] = ['max>=0'];
     });
@@ -161,17 +162,19 @@ export function journey(data) {
     const mixOk = check(mix, { 'resolve mix returned 200': (r) => r.status === 200 }) && layers.length > 0;
     if (!mixOk) return;
 
-    const downloads = http.batch(
-        layers.map((layer) => ({
-            method: 'GET',
-            url: toLocalUrl(layer.audioUrl),
-            params: { tags: { endpoint: 'audio_download' }, responseType: 'none' },
-        }))
-    );
-    check(downloads, { 'all audio layers returned 200': (rs) => rs.every((r) => r.status === 200) });
+    if (DOWNLOAD_AUDIO) {
+        const downloads = http.batch(
+            layers.map((layer) => ({
+                method: 'GET',
+                url: toLocalUrl(layer.audioUrl),
+                params: { tags: { endpoint: 'audio_download' }, responseType: 'none' },
+            }))
+        );
+        check(downloads, { 'all audio layers returned 200': (rs) => rs.every((r) => r.status === 200) });
 
-    const slowestDownload = Math.max(...downloads.map((r) => r.timings.duration));
-    audioReady.add(created.timings.duration + mix.timings.duration + slowestDownload);
+        const slowestDownload = Math.max(...downloads.map((r) => r.timings.duration));
+        audioReady.add(created.timings.duration + mix.timings.duration + slowestDownload);
+    }
 
     const completed = request(
         'PATCH',

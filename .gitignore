@@ -429,3 +429,6 @@ FodyWeavers.xsd
 
 # Coverage report (generated)
 mindsync-web/coverage
+
+# k6 results (generated)
+perf/results

@@ -34,14 +34,18 @@ public class GetOrCreateSessionAudioMixCommandHandlerTests
         new(Guid.NewGuid(), $"Faixa {role}", role, targetFrequency, 0, 8, $"{role}.mp3", 600, DateTime.UtcNow);
 
     [Fact]
-    public async Task Handle_ShouldReturnExistingMix_WithoutCallingComposer_WhenThereIsAlreadyOneForTheSession()
+    public async Task Handle_ShouldReturnExistingMix_WithoutCallingComposer_WhenOwnerRequestsASessionThatAlreadyHasOne()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var sessionId = Guid.NewGuid();
+        var session = new StressSession(sessionId, userId, DateTime.UtcNow, StressLevel.Moderate, "Theta (6 Hz) - Meditação");
         var track = CreateTrack("Binaural", "Theta (6 Hz) - Meditação");
         var existingMix = new SessionAudioMix(sessionId);
         existingMix.AddLayer(track.Id, 1.0m);
 
+        _currentUserServiceMock.UserId.Returns(userId);
+        _stressSessionRepositoryMock.GetSessionByIdAsync(sessionId, Arg.Any<CancellationToken>()).Returns(session);
         _mixRepositoryMock.GetByStressSessionIdAsync(sessionId, Arg.Any<CancellationToken>()).Returns(existingMix);
         _audioTrackRepositoryMock.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
                                   .Returns(new List<AudioTrack> { track });
@@ -54,7 +58,6 @@ public class GetOrCreateSessionAudioMixCommandHandlerTests
         result.Id.Should().Be(existingMix.Id);
         result.Layers.Should().ContainSingle(l => l.AudioTrackId == track.Id);
 
-        await _stressSessionRepositoryMock.DidNotReceive().GetSessionByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
         _audioMixComposerMock.DidNotReceive().Compose(Arg.Any<int>(), Arg.Any<string>(), Arg.Any<IEnumerable<AudioTrack>>());
         await _mixRepositoryMock.DidNotReceive().AddAsync(Arg.Any<SessionAudioMix>(), Arg.Any<CancellationToken>());
     }
@@ -115,6 +118,41 @@ public class GetOrCreateSessionAudioMixCommandHandlerTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>();
         await _mixRepositoryMock.DidNotReceive().AddAsync(Arg.Any<SessionAudioMix>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowNotFoundException_AndNotExposeTheMix_WhenMixAlreadyExistsButSessionBelongsToAnotherUser()
+    {
+        var realOwner = Guid.NewGuid();
+        var attacker = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var session = new StressSession(sessionId, realOwner, DateTime.UtcNow, StressLevel.Moderate, "Theta (6 Hz) - Meditação");
+        var track = CreateTrack("Binaural", "Theta (6 Hz) - Meditação");
+        var existingMix = new SessionAudioMix(sessionId);
+        existingMix.AddLayer(track.Id, 1.0m);
+
+        _currentUserServiceMock.UserId.Returns(attacker);
+        _stressSessionRepositoryMock.GetSessionByIdAsync(sessionId, Arg.Any<CancellationToken>()).Returns(session);
+        _mixRepositoryMock.GetByStressSessionIdAsync(sessionId, Arg.Any<CancellationToken>()).Returns(existingMix);
+
+        Func<Task> act = async () => await _handler.Handle(new GetOrCreateSessionAudioMixCommandRequest(sessionId), CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+        await _audioTrackRepositoryMock.DidNotReceive().GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>());
+        _audioFileUrlResolverMock.DidNotReceive().BuildUrl(Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowNotFoundException_WhenSessionDoesNotExist()
+    {
+        var sessionId = Guid.NewGuid();
+
+        _currentUserServiceMock.UserId.Returns(Guid.NewGuid());
+        _stressSessionRepositoryMock.GetSessionByIdAsync(sessionId, Arg.Any<CancellationToken>()).Returns((StressSession?)null);
+
+        Func<Task> act = async () => await _handler.Handle(new GetOrCreateSessionAudioMixCommandRequest(sessionId), CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 
     [Fact]

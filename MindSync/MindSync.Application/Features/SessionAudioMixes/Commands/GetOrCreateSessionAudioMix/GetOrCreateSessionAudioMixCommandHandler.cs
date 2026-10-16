@@ -19,15 +19,15 @@ public class GetOrCreateSessionAudioMixCommandHandler(
         GetOrCreateSessionAudioMixCommandRequest request,
         CancellationToken cancellationToken)
     {
-        var existingMix = await mixRepository.GetByStressSessionIdAsync(request.StressSessionId, cancellationToken);
-
-        if (existingMix is not null)
-            return await BuildResponseAsync(existingMix, cancellationToken);
-
         var session = await stressSessionRepository.GetSessionByIdAsync(request.StressSessionId, cancellationToken);
 
         if (session is null || session.UserId != currentUserService.UserId)
             throw new NotFoundException($"Sessão de estresse com o ID '{request.StressSessionId}' não foi encontrada.");
+
+        var existingMix = await mixRepository.GetByStressSessionIdAsync(request.StressSessionId, cancellationToken);
+
+        if (existingMix is not null)
+            return await BuildResponseAsync(existingMix, cancellationToken);
 
         var candidates = (await audioTrackRepository.GetCandidatesAsync(session.TargetFrequency, cancellationToken)).ToList();
         var selections = audioMixComposer.Compose((int)session.StressLevelBefore, session.TargetFrequency, candidates);

@@ -1,0 +1,112 @@
+.player-page {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    color: #fff;
+}
+
+.player-status-screen {
+    min-height: 100vh;
+    background: #05060b;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    justify-content: center;
+    align-items: center;
+    color: #94a3b8;
+    text-align: center;
+    padding: 0 1.5rem;
+}
+
+.player-back-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    padding: 0.6rem 1.3rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.player-content {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+}
+
+.player-loading-text {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+.player-error-text {
+    color: #f87171;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.player-progress-track {
+    width: 220px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.player-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #38bdf8, #c084fc);
+    transition: width 0.15s linear;
+}
+
+.player-progress-label {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.player-controls {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.player-controls.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.player-icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.2s ease;
+}
+
+.player-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: scale(1.06);
+}

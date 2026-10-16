@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/1 - Presentation/">
+    <Project Path="MindSync.Api/MindSync.Api.csproj" />
+  </Folder>
+  <Folder Name="/2 - Application/">
+    <Project Path="MindSync.Application/MindSync.Application.csproj" />
+  </Folder>
+  <Folder Name="/3 - Domain/">
+    <Project Path="MindSync.Domain/MindSync.Domain.csproj" />
+  </Folder>
+  <Folder Name="/4 - Infrastructure/">
+    <Project Path="MindSync.Infrastructure/MindSync.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/5 - Tests/">
+    <Project Path="MindSync.Tests/MindSync.Tests.csproj" />
+  </Folder>
+</Solution>

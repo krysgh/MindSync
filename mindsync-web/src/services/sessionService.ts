@@ -3,9 +3,9 @@ import type { ApiResponse } from '../types/apiResponse';
 import type { CompleteSessionPayload, CreateSessionPayload, StressSession } from '../types/session';
 
 export const sessionService = {
-    async listByUser(userId: string): Promise<StressSession[]> {
+    async listMine(): Promise<StressSession[]> {
         const response = await apiFetch<ApiResponse<StressSession[]>>(
-            `/sessions/users/${userId}`,
+            '/sessions/me',
             { method: 'GET' },
             'Falha ao carregar as sessões.'
         );

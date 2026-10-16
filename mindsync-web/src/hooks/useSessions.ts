@@ -23,7 +23,7 @@ export function useSessions(userId: string | null) {
         if (!userId) return;
         setIsLoading(true);
         try {
-            const data = await sessionService.listByUser(userId);
+            const data = await sessionService.listMine();
             setSessions(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Falha ao carregar as sessões.');

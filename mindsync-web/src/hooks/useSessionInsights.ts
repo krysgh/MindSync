@@ -12,7 +12,7 @@ export function useSessionInsights(userId: string | null) {
         if (!userId) return;
         setIsLoading(true);
         try {
-            const data = await sessionService.listByUser(userId);
+            const data = await sessionService.listMine();
             setSessions(data);
             setError('');
         } catch (err) {

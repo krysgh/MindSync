@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { sessionAudioMixService } from '../services/sessionAudioMixService';
 import { useAudioMixEngine } from '../hooks/useAudioMixEngine';
 import { useIdleControls } from '../hooks/useIdleControls';
-import { ReactiveBackground } from '../components/player/ReactiveBackground';
+import { ReactiveBackground } from '../components/player/Reactivebackground';
 import { MixerPanel } from '../components/player/MixerPanel';
 import { CloseIcon, PauseIcon, PlayIcon, SlidersIcon } from '../components/icons/Icons';
 import type { AudioMixLayer } from '../types/audioMix';

@@ -19,18 +19,9 @@ COPY . .
 WORKDIR "/src/MindSync.Api"
 RUN dotnet build "MindSync.Api.csproj" -c Release -o /app/build
 
-# Quality gate: runs the UNIT test suite during the image build (chained into
-# publish below, so it's part of the default build graph and a failing test
-# fails "docker build"). IntegrationTests are excluded on purpose: they boot
-# the real Program.cs via WebApplicationFactory, which needs a live SQL Server
-# reachable — something that doesn't exist yet at "docker build" time, before
-# docker-compose has created the network and started the sqlserver service.
-# Run integration tests separately, against the stack once it's already up
-# (e.g. "dotnet test --filter FullyQualifiedName~IntegrationTests" locally).
 FROM build AS test
 WORKDIR /src
-RUN dotnet test "MindSync.Tests/MindSync.Tests.csproj" -c Release --no-restore \
-    --filter "FullyQualifiedName!~IntegrationTests"
+RUN dotnet test "MindSync.Tests/MindSync.Tests.csproj" -c Release --no-restore
 
 FROM test AS publish
 WORKDIR "/src/MindSync.Api"
